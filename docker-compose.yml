@@ -1,0 +1,61 @@
+version: "3.9"
+services:
+  backend:
+    container_name: fastapi_blog_bknd
+    restart: unless-stopped
+    build:
+      context: ./backend
+    volumes:
+      - ./backend/src:/app
+    depends_on:
+      - posdb
+    environment:
+      POSTGRES_HOST: posdb
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: pwd
+      POSTGRES_USERSDB: BlogDB
+      DATABASE_URI: postgresql://admin:pwd@posdb:5432/BlogDB
+      PORT: 8000
+    expose:
+      - "8000"
+    dns:
+      - 1.1.1.1
+      - 1.0.0.1
+      - 8.8.8.8
+    networks:
+      - bknd-posdb
+    ports:
+      - "8000:8000"
+
+  posdb:
+    container_name: posdb_bknd
+    restart: unless-stopped
+    image: postgres
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: pwd
+      POSTGRES_DB: BlogDB
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - ./dbdata:/var/lib/postgresql/data/
+    expose:
+      - "5432"
+    networks:
+      - bknd-posdb
+
+  posadmin:
+    container_name: posadmin
+    restart: unless-stopped
+    image: dpage/pgadmin4
+    depends_on:
+      - posdb
+    environment:
+      PGADMIN_DEFAULT_EMAIL: nishithpshetty@gmail.com
+      PGADMIN_DEFAULT_PASSWORD: pwd
+    ports:
+      - "8080:80"
+    networks:
+      - bknd-posdb
+
+networks:
+  bknd-posdb:
